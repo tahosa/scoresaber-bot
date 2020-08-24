@@ -1,0 +1,12 @@
+# IDE Specific
+.vscode/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# data files
+*.pickle
+*.sqlite
+*.cfg
