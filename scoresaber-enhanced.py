@@ -8,9 +8,9 @@ import aiohttp
 import config
 import discord
 from discord.ext import commands, tasks
-import requests
 
 from database import Database
+from message_handler import MessageHandler
 
 _LOG = logging.getLogger('scoresaber')
 _LOG.setLevel(logging.DEBUG)
@@ -23,10 +23,10 @@ logging.getLogger().addHandler(_HANDLER)
 
 
 cfg = config.Config('server.cfg')
-scoresaber_url = 'https://new.scoresaber.com/api'
 
 client = discord.Client()
 database = Database()
+mh = MessageHandler(database)
 
 # @tasks.loop(seconds=60.0)
 # async def score_update():
@@ -42,41 +42,13 @@ async def on_message(message):
         await message.channel.send('Hewwo uwu')
 
     if message.content.lower().startswith('!list'):
-        players = [player.steam_id for player in database.get_players()]
-        await message.channel.send(f'Player list: {", ".join(players)}')
+        await mh.player_list(message)
 
     if message.content.lower().startswith('!register'):
-        cmd = message.content.lower().split(' ')
-        if len(cmd) != 3:
-            await message.channel.send(f'Invalid register command. Usage: `!register <steam_id> <discord_id>`')
-            return
+        await mh.register(message)
 
-        steam_id = cmd[1]
-        discord_id = cmd[2]
-
-        async with aiohttp.ClientSession() as session:
-            _LOG.debug(f'Looking up `{steam_id}`')
-            url = f'{scoresaber_url}/players/by-name/{steam_id}'
-            _LOG.debug(f'GET {url}')
-            async with session.get(url) as r:
-                _LOG.debug(f'Response from server. Code {r.status}')
-
-                if r.status == 200:
-                    result = await r.json()
-                    if len(result['players']) > 0:
-                        player = result['players'][0]
-                        try:
-                            database.create_player(steam_id, player['playerId'], discord_id)
-                            response = f'{steam_id} registered!'
-                        except Exception as ex:
-                            _LOG.exception(ex)
-                            response = f'Failed to register {steam_id}. {ex}'
-                            
-                        _LOG.info(response)
-                        await message.channel.send(response)
-
-                if r.status == 404:
-                    await message.channel.send(f'Player "{steam_id}" not found')
+    if message.content.lower().startswith('!scores'):
+        await mh.get_scores(message)
         
 
 @client.event
