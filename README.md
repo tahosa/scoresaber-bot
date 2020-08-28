@@ -3,10 +3,19 @@ scoresaber-bot
 
 This is a Discord bot for tracking scoresaber high scores among your friends!
 
-Installing
-----------
+Running
+-------
 
-TBD - Probably docker. For now, [install the python dependencies](#Developing) and run `python3 ./scoresaber.py`
+The bot is set up to be run using Docker. To start, do the following:
+
+1. [Create your server config file](#Configuring)
+2. (Optional) Create an empty file for the database.
+    * This is useful if you want the database to be re-used if you need to tear down the container for any reason, e.g. updating
+3. Build the container with `docker build . -t scoresaber:latest`
+    * Eventually it will be pushed to docker hub, but not yet
+4. Start the container and mount the config and database files
+    * `docker run -d --mount type=bind,source=/path/to/scores.db,target=/scoresaber/scores.db --mount type=bind,source=/path/to/server.cfg,target=/scoresaber/server.cfg scoresaber-bot:latest`
+    * This command assumes you are using `scores.db` as the database name inside your server config. Update that mount if you are using something else.
 
 Using
 -----
@@ -66,7 +75,7 @@ Time, in seconds, between checking the scoresaber API for new scores. The recomm
 Developing
 ----------
 
-The recommended use is to set up to use `pyenv` or `virtualenv` (or both) to manage the python dependencies.
+The recommended use is to set up to use `pyenv` or `virtualenv` (or both) to manage the python dependencies. Currently, the bot has been developed and tested using python 3.8.
 
 ```shell
 pyenv virtualenv python3 scoresaber-bot
@@ -78,4 +87,4 @@ This assumes you have configured pyenv correctly and set up the shim wrappers on
 
 ### Debugging
 
-Run the application with `python3 scoresaber.py`. If you are using VS Code, a launch configuration has been provided.
+Run the application with `python3 app/scoresaber.py`. If you are using VS Code, a launch configuration has been provided.
