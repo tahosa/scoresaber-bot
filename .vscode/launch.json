@@ -8,7 +8,7 @@
             "name": "Python: scoresaber",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/scoresaber.py",
+            "program": "${workspaceFolder}/app/scoresaber.py",
             "console": "integratedTerminal"
         },
         {
