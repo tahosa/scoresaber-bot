@@ -81,7 +81,7 @@ class MessageHandler:
     Get the list of scores for a player by steam ID
     '''
     async def get_player_scores(self, message):
-        cmd = message.content.lower().split(' ')
+        cmd = message.content.split(' ')
         if(len(cmd) < 2):
             await message.channel.send(f'Invalid scores command. Usage: `!scores <steam_id> [limit]')
         
