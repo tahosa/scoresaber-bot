@@ -118,7 +118,7 @@ class Database:
                      score: int,
                      song_name: str,
                      song_artist: str = '',
-                     song_mapper: str = '') -> bool:
+                     song_mapper: str = '') -> Score:
 
         # Find if there is already a score for this player in the table
         old_score = Score.select() \
@@ -129,21 +129,21 @@ class Database:
         if len(old_score): # Score already recorded
             _LOG.debug(f'Found old score of {old_score[0].score} for {player} on {song_name}')
             if score > old_score[0].score: # Is it higher than what we have?
-                old_score[0].update(score=score).execute()
-                return True
+                old_score[0].score = score
+                old_score[0].save()
+                return old_score[0]
             
             # Score wasn't higher than one already in the database
-            return False
+            return None
 
         else: # New song
-            score = Score.create(song_hash=song_hash,
+            return Score.create(song_hash=song_hash,
                             player=player,
                             score=score,
                             difficulty=difficulty,
                             song_name=song_name,
                             song_artist=song_artist,
                             song_mapper=song_mapper)
-            return True
 
 
     '''
