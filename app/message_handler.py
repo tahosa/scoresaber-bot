@@ -5,7 +5,7 @@ import requests
 import discord
 from peewee import IntegrityError
 
-from database import Database
+from database import Database, Difficulty
 from updater import ScoreUpdater
 
 _LOG = logging.getLogger('scoresaber')
@@ -76,16 +76,16 @@ class MessageHandler:
                 if r.status == 404:
                     await message.channel.send(f'Player "{steam_id}" not found')
                     return False
-    
+
     '''
     Get the list of scores for a player by steam ID
     '''
     async def get_player_scores(self, message):
         cmd = message.content.split(' ')
         if(len(cmd) < 2):
-            await message.channel.send(f'Invalid scores command. Usage: `!scores <steam_id> [limit]')
-        
-        limit = 100
+            await message.channel.send(f'Invalid scores command. Usage: `!scores <steam_id> [limit]`')
+
+        limit = 10
         if(len(cmd) > 2):
             limit = cmd[2]
 
@@ -97,7 +97,7 @@ class MessageHandler:
 
         reply = f'Top scores for {cmd[1]}: \n'
         for score in scores:
-            reply += f'{score.song_name}: {score.score}'
+            reply += f'{score.song_name} by {score.song_artist} ({Difficulty(score.difficulty)}): {score.score}\n'
 
         await message.channel.send(reply)
 
@@ -106,14 +106,14 @@ class MessageHandler:
     '''
     async def update(self, message):
         new_records = await self.updater.update()
-        
+
         await message.channel.send('High Scores Updated!')
-        
+
         response = ''
         if len(new_records) > 0:
             for record in new_records:
                 response += f'{record}\n'
         else:
             response = 'No new high scores.'
-                
+
         await message.channel.send(response)
