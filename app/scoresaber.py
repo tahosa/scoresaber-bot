@@ -14,7 +14,7 @@ from updater import ScoreUpdater
 from message_handler import MessageHandler
 
 _LOG = logging.getLogger('scoresaber')
-_LOG.setLevel(logging.DEBUG)
+_LOG.setLevel(logging.INFO)
 
 _HANDLER = logging.StreamHandler()
 _HANDLER.addFilter(logging.Filter(name = 'scoresaber'))
@@ -54,7 +54,7 @@ async def on_message(message):
 
         content = message.content.lower()
         _LOG.debug('Begin parsing message')
-        
+
         # Power User functions
         if f'{message.author.name}#{message.author.discriminator}' in cfg['power_users']:
             if content.startswith('!update'):
@@ -72,7 +72,7 @@ async def on_message(message):
 
         if content.startswith('!scores'):
             await mh.get_player_scores(message)
-        
+
 
 @client.event
 async def on_ready():
