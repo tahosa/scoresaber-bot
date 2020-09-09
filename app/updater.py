@@ -56,7 +56,7 @@ class ScoreUpdater:
                 else:
                     score_string = f'{score.player.steam_id}'
 
-                score_string += f' set a new high score of {score.score} on {score.song_name} ({Difficulty(score.difficulty)})'
+                score_string += f' set a new high score of {score.score} on {score.song_name} by {score.song_artist} ({Difficulty(score.difficulty)})'
                 response.append(score_string)
 
             if len(response) == 0: # New PBs, but no overall new highs
