@@ -97,7 +97,15 @@ class MessageHandler:
 
         reply = f'Top scores for {cmd[1]}: \n'
         for score in scores:
-            reply += f'{score.song_name} by {score.song_artist} ({Difficulty(score.difficulty)}): {score.score}\n'
+            reply += f'{score.song_name}'
+
+            if score.song_artist:
+                reply += f' by {score.song_artist}'
+
+            if score.song_mapper:
+                reply += f' [map by {score.song_mapper}]'
+
+            reply += f' ({Difficulty(score.difficulty)}): {score.score}\n'
 
         await message.channel.send(reply)
 
