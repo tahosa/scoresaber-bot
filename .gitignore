@@ -11,3 +11,4 @@ __pycache__/
 *.sqlite
 *.cfg
 *.db
+*.bak*

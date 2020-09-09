@@ -46,7 +46,7 @@ class Score(BaseModel):
     difficulty = IntegerField(null=False)
     player = ForeignKeyField(Player, backref='player')
     score = IntegerField(null=False)
-    
+
     class Meta:
         constraints = [SQL('UNIQUE(song_hash, difficulty, player_id)')]
 
@@ -106,7 +106,7 @@ class Database:
 
     '''
     Create or update a high score for a specific song by a player.
-    
+
     If a record doesn't exist, create a new high score for a song. If a record exists,
     update it if the new score is higher. Returns true if the score was created or updated,
     false otherwise.
@@ -132,7 +132,7 @@ class Database:
                 old_score[0].score = score
                 old_score[0].save()
                 return old_score[0]
-            
+
             # Score wasn't higher than one already in the database
             return None
 
@@ -157,14 +157,18 @@ class Database:
     Get the current high-score records
     '''
     def get_high_scores(self) -> List[Score]:
-        raw_scores = Score.select(Score, Player, fn.Max(Score.score).alias('high_score')) \
+        return Score.select(Score, Player, fn.Max(Score.score).alias('high_score')) \
                     .join(Player) \
                     .group_by(Score.song_hash, Score.difficulty) \
-                    .execute()
-        
-        # We need to unpack these values now so we don't get connection errors to the DB later
-        scores = []
-        for score in raw_scores:
-            scores.append(score)
+                    .prefetch(Player)
 
-        return scores
+
+    '''
+    Get the scores for a particular song
+    '''
+    def get_song_scores(self, song_hash: str, difficulty: Difficulty) -> List[Score]:
+        return Score.select() \
+            .join(Player) \
+            .where((Score.song_hash == song_hash) & (Score.difficulty == difficulty)) \
+            .order_by(Score.score.desc()) \
+            .prefetch(Player)
