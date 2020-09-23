@@ -46,7 +46,14 @@ async def score_update():
 @client.event
 async def on_message(message):
     # Ignore messages from the bot, or from channels that are not being watched
-    if message.author == client.user or message.channel.id not in  cfg['channels']:
+    if message.author == client.user:
+        return
+
+    if message.content.lower().startswith('hello bot'):
+        await message.channel.send('Hewwo uwu')
+        return
+
+    if message.channel.id not in cfg['channels']:
         return
 
     _LOG.debug('Opening database')
@@ -63,9 +70,6 @@ async def on_message(message):
             if content.startswith('!register'):
                 if await mh.register(message):
                     await mh.update(message)
-
-        if content.startswith('hello bot'):
-            await message.channel.send('Hewwo uwu')
 
         if content.startswith('!list'):
             await mh.player_list(message)

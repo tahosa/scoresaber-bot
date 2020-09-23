@@ -21,31 +21,41 @@ class ScoreUpdater:
     '''
     Query scoresaber for new scores and update the database. Returns a list of new records.
     '''
-    async def update(self) -> List[str]:
+    async def update(self, force_all=False) -> List[str]:
         players = self.database.get_players()
         new_pbs = []
 
         for player in players:
             async with aiohttp.ClientSession() as session:
                 _LOG.debug(f'Fetching new scores for {player.steam_id}')
-                async with session.get(f'{scoresaber_url}/player/{player.scoresaber_id}/scores/recent/1') as r:
-                    if r.status == 200:
-                        json = await r.json()
-                        scores = json['scores']
-                        _LOG.debug(f'Found {len(scores)} to parse')
-                        for score in scores:
-                            new_high = self.database.update_score(
-                                player=player.steam_id,
-                                song_hash=score['songHash'],
-                                song_name=score['songName'],
-                                song_artist=score['songAuthorName'],
-                                song_mapper=score['levelAuthorName'],
-                                difficulty=score['difficulty'],
-                                score=score['score'],
-                            )
+                page = 1
+                while True:
+                    async with session.get(f'{scoresaber_url}/player/{player.scoresaber_id}/scores/recent/{page}') as r:
+                        if r.status == 200:
+                            json = await r.json()
+                            scores = json['scores']
+                            _LOG.debug(f'Found {len(scores)} to parse')
+                            for score in scores:
+                                new_high = self.database.update_score(
+                                    player=player.steam_id,
+                                    song_hash=score['songHash'],
+                                    song_name=score['songName'],
+                                    song_artist=score['songAuthorName'],
+                                    song_mapper=score['levelAuthorName'],
+                                    difficulty=score['difficulty'],
+                                    score=score['score'],
+                                )
 
-                            if new_high:
-                                new_pbs.append(new_high)
+                                if new_high and new_high not in new_pbs:
+                                    new_pbs.append(new_high)
+                            page += 1
+
+                        else:
+                            _LOG.debug(f'Bad return status {r.status} {r.reason}')
+                            break
+
+                    if not force_all:
+                        break
 
         if len(new_pbs):
             new_overall = self.database.get_high_scores()

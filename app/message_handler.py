@@ -113,8 +113,10 @@ class MessageHandler:
     Update the list of high scores
     '''
     async def update(self, message):
-        new_records = await self.updater.update()
+        force = '--force' in message.content
+        quiet = '--quiet' in message.content
 
+        new_records = await self.updater.update(force)
         await message.channel.send('High Scores Updated!')
 
         response = ''
@@ -124,4 +126,7 @@ class MessageHandler:
         else:
             response = 'No new high scores.'
 
-        await message.channel.send(response)
+        if len(response) > 2000 or quiet:
+            await message.channel.send(f'{len(new_records)} new high scores.')
+        else:
+            await message.channel.send(response)
