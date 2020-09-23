@@ -77,6 +77,9 @@ async def on_message(message):
         if content.startswith('!scores'):
             await mh.get_player_scores(message)
 
+        if content.startswith('!top'):
+            await mh.search_top(message)
+
 
 @client.event
 async def on_ready():

@@ -4,7 +4,7 @@ from enum import Enum
 
 import config
 from peewee import (SQL, CharField, ForeignKeyField, IntegerField, Model,
-                    SqliteDatabase, fn)
+                    SqliteDatabase, fn, AutoField)
 
 _LOG = logging.getLogger('scoresaber')
 
@@ -39,6 +39,7 @@ class Player(BaseModel):
 Individual song record. Only one per player ever exists and is updated when new high scores are recorded
 '''
 class Score(BaseModel):
+    id = AutoField()
     song_name = CharField(null=False)
     song_artist = CharField()
     song_mapper = CharField()
@@ -171,4 +172,26 @@ class Database:
             .join(Player) \
             .where((Score.song_hash == song_hash) & (Score.difficulty == difficulty)) \
             .order_by(Score.score.desc()) \
+            .prefetch(Player)
+
+    '''
+    Search for songs and return the top score for all difficulties found, if any
+    '''
+    def get_top_search(self, search_str: str) -> List[Score]:
+        # Alias partitioning from: https://charlesleifer.com/blog/querying-the-top-n-objects-per-group-with-peewee-orm/
+        score_alias = Score.alias()
+
+        subquery = (score_alias
+                        .select(score_alias, fn.RANK().over(
+                            partition_by=[score_alias.song_hash, score_alias.difficulty],
+                            order_by=[score_alias.score.desc()]).alias('rk')
+                        ).alias('subq'))
+
+        return Score.select(Score, Player) \
+            .join(Player) \
+            .switch(Score) \
+            .join(subquery, on=((subquery.c.id == Score.id) & (subquery.c.rk == 1))) \
+            .where((Score.song_name ** f'%{search_str}%')) \
+            .group_by(Score.song_hash, Score.difficulty) \
+            .order_by(Score.song_name.asc()) \
             .prefetch(Player)

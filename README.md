@@ -28,9 +28,13 @@ This adds a new user to the tracking database. For `steam_id` Use the complete, 
 
 `discord#id` is the server-unique name and discriminator code for that user in your server. The user must be in your server for the registration to work since the lookup is done on the server members. This is optional, but if specified will mention that user when they break a record.
 
-#### `!update`
+#### `!update [--force] [--quiet]`
 
 Force an update of the scores list. The server will automatically update the list when a new user is registered, and on the interval specified in the [(configuration file)](#Configuring).
+
+If the `--force` flag is set, the system will import all scores from all registered players by paging through scoresaber data. This operation may take some time, and be too long to display all results. Discord caps messages at 2000 characters, and if the total message exceeds this the bot will simply use the same output as if the `--quiet` flag was set.
+
+The `--quiet` flag prints simply the number of scores which were updated instead of a detailed list of players, songs, and scores.
 
 #### `!list`
 
@@ -39,6 +43,10 @@ List the currently registered users
 #### `!scores <steam_id> [limit]`
 
 List a number of the top scores of the specified preregistered user, up to `limit`. Unlike the `!register` command, this command reads the local database for users and will exact-match the given `steam_id` instead of fuzzy-match/searching.
+
+#### `!top <search>`
+
+Search for any songs whose name matches the search string and sends back the list of matching high scores by song and difficulty. The search string may include SQL wildcards. This search should be injection-safe as the query is parameterized for input sanitization purposes. Searches with too many results for discord's output (2000 characters) will not be sent and a request to narrow the search will be sent instead.
 
 Configuring
 -----------

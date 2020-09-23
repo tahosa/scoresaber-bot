@@ -5,11 +5,28 @@ import requests
 import discord
 from peewee import IntegrityError
 
-from database import Database, Difficulty
+from database import Database, Difficulty, Score
 from updater import ScoreUpdater
 
 _LOG = logging.getLogger('scoresaber')
 scoresaber_url = 'https://new.scoresaber.com/api'
+
+'''
+Format a score for printing
+'''
+def _format_score(score: Score) -> str:
+    result = f'{score.song_name}'
+
+    if score.song_artist:
+        result += f' by {score.song_artist}'
+
+    if score.song_mapper:
+        result += f' [map by {score.song_mapper}]'
+
+    result += f' ({Difficulty(score.difficulty)}): {score.score}'
+
+    return result
+
 
 class MessageHandler:
     database: Database = None
@@ -97,15 +114,7 @@ class MessageHandler:
 
         reply = f'Top scores for {cmd[1]}: \n'
         for score in scores:
-            reply += f'{score.song_name}'
-
-            if score.song_artist:
-                reply += f' by {score.song_artist}'
-
-            if score.song_mapper:
-                reply += f' [map by {score.song_mapper}]'
-
-            reply += f' ({Difficulty(score.difficulty)}): {score.score}\n'
+            reply += f'{_format_score(score)}\n'
 
         await message.channel.send(reply)
 
@@ -128,5 +137,26 @@ class MessageHandler:
 
         if len(response) > 2000 or quiet:
             await message.channel.send(f'{len(new_records)} new high scores.')
+        else:
+            await message.channel.send(response)
+
+    '''
+    Get a list of scores matching a search
+    '''
+    async def search_top(self, message):
+        search = message.content[len('!top'):].strip()
+        if len(search) < 1:
+            await message.channel.send('No search string specified')
+            return
+
+        results = self.database.get_top_search(search)
+
+        response = f'Top scores for songs matching `{search}`:\n'
+        for score in results:
+            response += f'{score.player.steam_id}: {_format_score(score)}\n'
+
+        if len(response) > 2000:
+            await message.channel.send(f'Too many results to display ({len(results)}). Try a narrower search.')
+
         else:
             await message.channel.send(response)
